@@ -1,27 +1,32 @@
-# Neon Database Setup for Netlify
+# Netlify DB Setup Guide
 
-This guide will help you set up your Neon PostgreSQL database with your Netlify deployment.
+This guide will help you set up your database using Netlify's new integrated database system powered by Neon.
 
-## 1. Database Connection String
+## 🚀 Automatic Database Setup (Recommended)
 
-Your Neon database connection string is:
-```
-postgresql://neondb_owner:npg_v6OD0qVbhWNU@ep-restless-math-aespx8ze-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-```
+Since you have the `@netlify/neon` package installed, Netlify will automatically:
+- Create a Neon database instance when you deploy
+- Set up the `DATABASE_URL` environment variable automatically
+- Handle all database configuration for you
 
-## 2. Setting Environment Variables in Netlify
+## 1. Deploy Your Changes
 
-### Option A: Through Netlify Dashboard
+Simply push your code to GitHub and Netlify will:
+1. Detect the `@netlify/neon` package
+2. Automatically create a database instance
+3. Set up the connection string
+4. Deploy your application
+
+## 2. Claim Your Database (Important!)
+
+After your first deployment, you need to claim your database:
+
 1. Go to your Netlify site dashboard
-2. Navigate to **Site settings** → **Environment variables**
-3. Add a new environment variable:
-   - **Key**: `DATABASE_URL`
-   - **Value**: `postgresql://neondb_owner:npg_v6OD0qVbhWNU@ep-restless-math-aespx8ze-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+2. Navigate to **Extensions** → **Neon**
+3. Click **Connect Neon** and follow the setup prompts
+4. Click **Claim database** to make it permanent
 
-### Option B: Through Netlify CLI
-```bash
-netlify env:set DATABASE_URL "postgresql://neondb_owner:npg_v6OD0qVbhWNU@ep-restless-math-aespx8ze-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-```
+⚠️ **Important**: Unclaimed databases are deleted after 7 days!
 
 ## 3. Database Schema
 
@@ -55,7 +60,7 @@ The application will automatically populate the working hours table with default
 
 ## 5. Testing the Connection
 
-After deploying to Netlify with the environment variable set:
+After deploying to Netlify:
 
 1. Visit your Netlify site
 2. Check the browser console for any database connection errors
@@ -66,32 +71,37 @@ After deploying to Netlify with the environment variable set:
 
 ### Common Issues:
 
-1. **Connection Timeout**: Ensure your Neon database is not paused
-2. **SSL Errors**: The connection string includes SSL requirements
-3. **Environment Variable Not Set**: Double-check the `DATABASE_URL` is set in Netlify
+1. **Database Not Created**: Make sure you've claimed your database in the Netlify UI
+2. **Connection Errors**: Check Netlify function logs in the dashboard
+3. **Missing Environment Variable**: The `DATABASE_URL` should be set automatically
 
 ### Debug Steps:
 
 1. Check Netlify function logs in the dashboard
-2. Verify the environment variable is set correctly
-3. Test the database connection string locally if needed
+2. Verify the database is claimed in Extensions → Neon
+3. Check that the `@netlify/neon` package is installed
 
-## 7. Security Notes
+## 7. Local Development
 
-- The database connection string contains credentials
-- Keep this information secure
-- Consider rotating credentials periodically
-- Monitor database usage in your Neon dashboard
+For local development with Netlify DB:
 
-## 8. Local Development
-
-For local development, create a `.env` file in your project root:
-```
-DATABASE_URL=postgresql://neondb_owner:npg_v6OD0qVbhWNU@ep-restless-math-aespx8ze-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-```
-
-Then run:
 ```bash
+# Install dependencies
 npm install
-npm start
+
+# Run local development server (will auto-create database)
+netlify dev
 ```
+
+The `netlify dev` command will automatically:
+- Create a local database instance
+- Set up the `DATABASE_URL` environment variable
+- Start your application with database connectivity
+
+## 8. Benefits of Netlify DB
+
+✅ **Automatic Setup**: No manual environment variable configuration  
+✅ **Integrated Workflow**: Database created during deployment  
+✅ **Production Ready**: Full Neon database features  
+✅ **Easy Management**: Manage through Netlify dashboard  
+✅ **Cost Effective**: Pay only for what you use
