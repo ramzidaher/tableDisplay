@@ -1,0 +1,314 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "IT Office Display API",
+		"description": "Complete API collection for the IT Office Display system deployed on Netlify",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Notes API",
+			"item": [
+				{
+					"name": "Get All Notes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notes"
+							]
+						},
+						"description": "Retrieve all notes from the system"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Note by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notes",
+								"1"
+							]
+						},
+						"description": "Retrieve a specific note by its ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Note",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"This is a test note from Postman\",\n  \"priority\": \"normal\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notes"
+							]
+						},
+						"description": "Create a new note in the system"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Note",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Updated note message\",\n  \"priority\": \"high\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/notes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notes",
+								"1"
+							]
+						},
+						"description": "Update an existing note"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Note",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notes",
+								"1"
+							]
+						},
+						"description": "Delete a specific note by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Clear All Notes",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"notes"
+							]
+						},
+						"description": "Delete all notes from the system"
+					},
+					"response": []
+				}
+			],
+			"description": "All endpoints for managing notes"
+		},
+		{
+			"name": "Working Hours API",
+			"item": [
+				{
+					"name": "Get All Working Hours",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/working-hours",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"working-hours"
+							]
+						},
+						"description": "Retrieve all working hours for Tim and Ramzi"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Person Schedule",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"schedule\": {\n    \"monday\": { \"location\": \"Office\", \"hours\": \"9:00 AM - 5:00 PM\" },\n    \"tuesday\": { \"location\": \"Office\", \"hours\": \"9:00 AM - 5:00 PM\" },\n    \"wednesday\": { \"location\": \"Office\", \"hours\": \"9:00 AM - 5:00 PM\" },\n    \"thursday\": { \"location\": \"Office\", \"hours\": \"9:00 AM - 5:00 PM\" },\n    \"friday\": { \"location\": \"Work from Home\", \"hours\": \"9:00 AM - 5:00 PM\" }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/working-hours/tim",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"working-hours",
+								"tim"
+							]
+						},
+						"description": "Update the entire schedule for a person (tim or ramzi)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Specific Day - Tim Monday",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"location\": \"Office\",\n  \"hours\": \"8:00 AM - 6:00 PM\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/working-hours/tim/monday",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"working-hours",
+								"tim",
+								"monday"
+							]
+						},
+						"description": "Update a specific day for a person"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Specific Day - Ramzi Friday",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"location\": \"Work from Home\",\n  \"hours\": \"10:00 AM - 4:00 PM\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/working-hours/ramzi/friday",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"working-hours",
+								"ramzi",
+								"friday"
+							]
+						},
+						"description": "Update Ramzi's Friday schedule"
+					},
+					"response": []
+				}
+			],
+			"description": "All endpoints for managing working hours"
+		},
+		{
+			"name": "Display Pages",
+			"item": [
+				{
+					"name": "Admin Interface",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Access the admin interface for managing notes"
+					},
+					"response": []
+				},
+				{
+					"name": "Display Interface",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/display",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"display"
+							]
+						},
+						"description": "Access the display interface for showing notes and working hours"
+					},
+					"response": []
+				}
+			],
+			"description": "Web interface endpoints"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://profound-malasada-57c01b.netlify.app",
+			"type": "string"
+		}
+	]
+}

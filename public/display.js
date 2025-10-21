@@ -42,9 +42,57 @@ class NotesDisplay {
                 this.renderWorkingHours();
             } else {
                 console.error('Failed to load working hours');
+                // Set default working hours if API fails
+                this.workingHours = {
+                    tim: {
+                        name: 'Tim',
+                        schedule: {
+                            monday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                            tuesday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                            wednesday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                            thursday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                            friday: { location: 'Work from Home', hours: '9:00 AM - 5:00 PM' }
+                        }
+                    },
+                    ramzi: {
+                        name: 'Ramzi',
+                        schedule: {
+                            monday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                            tuesday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                            wednesday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                            thursday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                            friday: { location: 'Work from Home', hours: '9:00 AM - 5:00 PM' }
+                        }
+                    }
+                };
+                this.renderWorkingHours();
             }
         } catch (error) {
             console.error('Error loading working hours:', error);
+            // Set default working hours if API fails
+            this.workingHours = {
+                tim: {
+                    name: 'Tim',
+                    schedule: {
+                        monday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                        tuesday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                        wednesday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                        thursday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                        friday: { location: 'Work from Home', hours: '9:00 AM - 5:00 PM' }
+                    }
+                },
+                ramzi: {
+                    name: 'Ramzi',
+                    schedule: {
+                        monday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                        tuesday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                        wednesday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                        thursday: { location: 'Office', hours: '9:00 AM - 5:00 PM' },
+                        friday: { location: 'Work from Home', hours: '9:00 AM - 5:00 PM' }
+                    }
+                }
+            };
+            this.renderWorkingHours();
         }
     }
 
@@ -65,16 +113,29 @@ class NotesDisplay {
         // Sort notes by timestamp (newest first)
         const sortedNotes = [...this.notes].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-        container.innerHTML = sortedNotes.map(note => `
-            <div class="note-card ${note.priority}-priority">
+        // Add fade-in animation for new notes
+        const notesHtml = sortedNotes.map(note => `
+            <div class="note-card ${note.priority}-priority fade-in">
                 <div class="note-message">${this.escapeHtml(note.message)}</div>
                 <div class="note-timestamp">${this.formatTimestamp(note.timestamp)}</div>
             </div>
         `).join('');
+
+        container.innerHTML = notesHtml;
+        
+        // Trigger animation for new notes
+        setTimeout(() => {
+            const noteCards = container.querySelectorAll('.note-card');
+            noteCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        }, 50);
     }
 
     renderWorkingHours() {
         const container = document.getElementById('workingHoursDisplay');
+        
+        console.log('Working hours data:', this.workingHours); // Debug log
         
         if (!this.workingHours || Object.keys(this.workingHours).length === 0) {
             container.innerHTML = `
@@ -89,26 +150,77 @@ class NotesDisplay {
 
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
         const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-        const people = Object.values(this.workingHours);
+        
+        // Handle different data structures
+        let people = [];
+        
+        if (Array.isArray(this.workingHours)) {
+            // If it's an array of people
+            people = this.workingHours;
+        } else {
+            // If it's an object with people as keys
+            people = Object.keys(this.workingHours).map(key => {
+                const personData = this.workingHours[key];
+                return {
+                    name: personData.name || key.charAt(0).toUpperCase() + key.slice(1),
+                    schedule: personData.schedule || personData
+                };
+            });
+        }
+        
+        if (people.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h2>👥</h2>
+                    <h2>No Schedule Available</h2>
+                    <p>Working hours will appear here when configured.</p>
+                </div>
+            `;
+            return;
+        }
         
         // Show only one person at a time, cycling through them
         const currentPersonIndex = Math.floor(Date.now() / 5000) % people.length; // Change every 5 seconds
         const currentPerson = people[currentPersonIndex];
 
-        container.innerHTML = `
-            <div class="person-schedule">
-                <div class="person-name">${currentPerson.name}</div>
-                ${days.map((day, index) => `
-                    <div class="day-schedule">
-                        <div class="day-name">${dayNames[index]}</div>
-                        <div class="day-info">
-                            <div class="day-location">${currentPerson.schedule[day].location}</div>
-                            <div class="day-hours">${currentPerson.schedule[day].hours}</div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+        console.log('Current person:', currentPerson); // Debug log
+
+        // Add fade transition
+        const existingSchedule = container.querySelector('.person-schedule');
+        if (existingSchedule) {
+            existingSchedule.classList.add('fade-out');
+        }
+
+        setTimeout(() => {
+            container.innerHTML = `
+                <div class="person-schedule fade-in">
+                    <div class="person-name">${currentPerson.name}</div>
+                    ${days.map((day, index) => {
+                        const dayData = currentPerson.schedule[day];
+                        if (!dayData) {
+                            return `
+                                <div class="day-schedule">
+                                    <div class="day-name">${dayNames[index]}</div>
+                                    <div class="day-info">
+                                        <div class="day-location">Not set</div>
+                                        <div class="day-hours">Not set</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        return `
+                            <div class="day-schedule">
+                                <div class="day-name">${dayNames[index]}</div>
+                                <div class="day-info">
+                                    <div class="day-location">${dayData.location || 'Not set'}</div>
+                                    <div class="day-hours">${dayData.hours || 'Not set'}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }, existingSchedule ? 150 : 0);
     }
 
     startAutoRefresh() {
