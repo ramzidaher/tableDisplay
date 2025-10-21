@@ -27,6 +27,19 @@ const handler = async (event, context) => {
   }
 
   try {
+    // Check if database URL is set
+    if (!process.env.NETLIFY_DATABASE_URL && !process.env.DATABASE_URL) {
+      console.error('No database URL environment variable found');
+      return { 
+        statusCode: 500, 
+        headers, 
+        body: JSON.stringify({ 
+          error: 'Database configuration error', 
+          message: 'No database URL environment variable found (NETLIFY_DATABASE_URL or DATABASE_URL)' 
+        }) 
+      };
+    }
+
     // Initialize database on first request
     await initializeDatabase();
     

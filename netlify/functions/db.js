@@ -1,9 +1,9 @@
 const { Pool } = require('pg');
 
 // Database connection configuration
-// Netlify DB will automatically provide DATABASE_URL environment variable
+// Netlify DB provides NETLIFY_DATABASE_URL environment variable
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? {
     rejectUnauthorized: false
   } : false
@@ -12,6 +12,14 @@ const pool = new Pool({
 // Initialize database tables
 async function initializeDatabase() {
   try {
+    console.log('Initializing database...');
+    console.log('NETLIFY_DATABASE_URL exists:', !!process.env.NETLIFY_DATABASE_URL);
+    console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+    
+    // Test connection first
+    await pool.query('SELECT NOW()');
+    console.log('Database connection successful');
+    
     // Create notes table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notes (
