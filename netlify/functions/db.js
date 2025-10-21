@@ -23,7 +23,7 @@ async function initializeDatabase() {
     // Create notes table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS notes (
-        id SERIAL PRIMARY KEY,
+        id INTEGER PRIMARY KEY,
         message TEXT NOT NULL,
         timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         priority VARCHAR(20) DEFAULT 'normal'
@@ -85,9 +85,22 @@ async function getNoteById(id) {
 }
 
 async function createNote(message, priority = 'normal') {
+  // Find the lowest available ID
+  const existingIdsResult = await pool.query('SELECT id FROM notes ORDER BY id');
+  const existingIds = existingIdsResult.rows.map(row => row.id);
+  
+  let newId = 1;
+  for (const id of existingIds) {
+    if (id === newId) {
+      newId++;
+    } else {
+      break;
+    }
+  }
+  
   const result = await pool.query(
-    'INSERT INTO notes (message, priority) VALUES ($1, $2) RETURNING *',
-    [message, priority]
+    'INSERT INTO notes (id, message, priority) VALUES ($1, $2, $3) RETURNING *',
+    [newId, message, priority]
   );
   return result.rows[0];
 }

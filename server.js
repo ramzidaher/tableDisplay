@@ -72,8 +72,19 @@ app.post('/api/notes', (req, res) => {
     return res.status(400).json({ error: 'Message is required' });
   }
   
+  // Find the lowest available ID
+  const existingIds = notes.map(n => n.id).sort((a, b) => a - b);
+  let newId = 1;
+  for (const id of existingIds) {
+    if (id === newId) {
+      newId++;
+    } else {
+      break;
+    }
+  }
+  
   const newNote = {
-    id: notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1,
+    id: newId,
     message: message.trim(),
     timestamp: new Date().toISOString(),
     priority: priority || 'normal'
