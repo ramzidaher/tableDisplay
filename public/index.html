@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IT Office - Admin</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="glass-container">
+        <div class="display-header">
+            <h1>📝 IT Office Admin</h1>
+            <div class="controls">
+                <input type="text" id="newNoteInput" placeholder="Enter your message..." maxlength="200">
+                <button id="addNoteBtn">Add Note</button>
+                <button id="clearAllBtn">Clear All</button>
+            </div>
+        </div>
+        
+        <div class="notes-container" id="notesContainer">
+            <!-- Notes will be dynamically loaded here -->
+        </div>
+        
+        <div class="status-bar">
+            <span id="statusText">Ready</span>
+            <span id="lastUpdate">Last updated: Never</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

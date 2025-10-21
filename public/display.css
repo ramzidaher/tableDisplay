@@ -1,0 +1,632 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial Black', 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    color: white;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-overflow-scrolling: touch;
+}
+
+.display-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+/* Split layout sections */
+.notes-section {
+    flex: 0.2;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.hours-section {
+    flex: 0.8;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.support-section {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px 30px;
+    flex-shrink: 0;
+}
+
+.section-header {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px 30px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0;
+}
+
+.display-header {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 30px 50px;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(20px);
+}
+
+.display-header h1 {
+    font-size: 4rem;
+    font-weight: 700;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    letter-spacing: 2px;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+#connectionStatus {
+    font-size: 12px;
+    color: #4CAF50;
+    animation: pulse 2s infinite;
+}
+
+#connectionStatus.disconnected {
+    color: #f44336;
+}
+
+.notes-display {
+    flex: 1;
+    padding: 10px 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    min-height: 0;
+}
+
+.working-hours-display {
+    flex: 1;
+    padding: 15px 25px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    min-height: 0;
+    max-height: 100%;
+}
+
+/* Working hours specific styles */
+.person-schedule {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    border-left: 4px solid #4CAF50;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.person-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.day-schedule {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    border-left: 2px solid #2196F3;
+}
+
+.day-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    min-width: 80px;
+}
+
+.day-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.day-location {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 2px;
+}
+
+.day-hours {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Support section styles */
+.support-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.support-text {
+    text-align: center;
+}
+
+.support-text h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.support-text p {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 8px;
+}
+
+
+.note-card {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    padding: 15px 20px;
+    border-left: 4px solid #4CAF50;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+    animation: slideInUp 0.6s ease-out;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.note-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.note-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.note-card.high-priority {
+    border-left-color: #f44336;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.note-card.low-priority {
+    border-left-color: #2196F3;
+    background: rgba(33, 150, 243, 0.1);
+}
+
+.note-message {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    word-wrap: break-word;
+    letter-spacing: 0.5px;
+}
+
+.note-timestamp {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.note-timestamp::before {
+    content: '🕒';
+    font-size: 0.6rem;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-state h2 {
+    font-size: 4rem;
+    margin-bottom: 25px;
+    font-weight: 700;
+}
+
+.empty-state p {
+    font-size: 2.2rem;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.loading-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+
+/* Animations */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px);
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0);
+    }
+}
+
+.note-card.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Scrollbar styling */
+.notes-display::-webkit-scrollbar,
+.working-hours-display::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notes-display::-webkit-scrollbar-track,
+.working-hours-display::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.notes-display::-webkit-scrollbar-thumb,
+.working-hours-display::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.notes-display::-webkit-scrollbar-thumb:hover,
+.working-hours-display::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Amazon Fire Tablet optimizations */
+@media (max-width: 1024px) and (min-width: 768px) {
+    .display-header {
+        padding: 20px 30px;
+    }
+    
+    .display-header h1 {
+        font-size: 3rem;
+    }
+    
+    .section-header h2 {
+        font-size: 2rem;
+    }
+    
+    .note-message {
+        font-size: 3rem;
+    }
+    
+    .note-timestamp {
+        font-size: 1.5rem;
+    }
+    
+    .person-name {
+        font-size: 2rem;
+    }
+    
+    .day-name {
+        font-size: 1.4rem;
+    }
+    
+    .day-location {
+        font-size: 1.2rem;
+    }
+    
+    .day-hours {
+        font-size: 1rem;
+    }
+    
+    .time-display {
+        font-size: 1.5rem;
+    }
+    
+    .note-count {
+        font-size: 1.3rem;
+    }
+    
+    .support-text h3, .qr-section h3 {
+        font-size: 1.5rem;
+    }
+    
+    .support-text p, .qr-section p {
+        font-size: 1.2rem;
+    }
+    
+    .qr-code {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* Small tablets and large phones */
+@media (max-width: 768px) {
+    .display-header {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .display-header h1 {
+        font-size: 2.5rem;
+    }
+    
+    .section-header {
+        padding: 10px 20px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.8rem;
+    }
+    
+    .notes-display, .working-hours-display {
+        padding: 20px;
+        gap: 15px;
+    }
+    
+    .note-card {
+        padding: 25px 30px;
+        margin-bottom: 20px;
+    }
+    
+    .note-message {
+        font-size: 2.5rem;
+    }
+    
+    .note-timestamp {
+        font-size: 1.3rem;
+    }
+    
+    .person-schedule {
+        padding: 20px 25px;
+        margin-bottom: 15px;
+    }
+    
+    .person-name {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .day-schedule {
+        padding: 12px 15px;
+        margin-bottom: 8px;
+    }
+    
+    .day-name {
+        font-size: 1.2rem;
+        min-width: 100px;
+    }
+    
+    .day-location {
+        font-size: 1rem;
+    }
+    
+    .day-hours {
+        font-size: 0.9rem;
+    }
+    
+    .support-section {
+        padding: 10px 15px;
+    }
+    
+    .support-info {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .support-text h3, .qr-section h3 {
+        font-size: 1.1rem;
+    }
+    
+    .support-text p, .qr-section p {
+        font-size: 0.9rem;
+    }
+    
+    .qr-code {
+        width: 50px;
+        height: 50px;
+        font-size: 0.6rem;
+    }
+    
+}
+
+/* Small phones and very small tablets */
+@media (max-width: 480px) {
+    .display-header {
+        padding: 10px 15px;
+    }
+    
+    .display-header h1 {
+        font-size: 2rem;
+    }
+    
+    .section-header {
+        padding: 8px 15px;
+    }
+    
+    .section-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .notes-display, .working-hours-display {
+        padding: 15px;
+        gap: 10px;
+    }
+    
+    .note-card {
+        padding: 20px 25px;
+        margin-bottom: 15px;
+    }
+    
+    .note-message {
+        font-size: 2rem;
+    }
+    
+    .note-timestamp {
+        font-size: 1.1rem;
+    }
+    
+    .person-schedule {
+        padding: 15px 20px;
+        margin-bottom: 10px;
+    }
+    
+    .person-name {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+    
+    .day-schedule {
+        padding: 10px 12px;
+        margin-bottom: 6px;
+    }
+    
+    .day-name {
+        font-size: 1rem;
+        min-width: 80px;
+    }
+    
+    .day-location {
+        font-size: 0.9rem;
+    }
+    
+    .day-hours {
+        font-size: 0.8rem;
+    }
+    
+    .support-section {
+        padding: 8px 12px;
+    }
+    
+    .support-text h3, .qr-section h3 {
+        font-size: 1rem;
+    }
+    
+    .support-text p, .qr-section p {
+        font-size: 0.8rem;
+    }
+    
+    .qr-code {
+        width: 40px;
+        height: 40px;
+        font-size: 0.5rem;
+    }
+    
+}
+
+/* Amazon Fire Tablet specific optimizations */
+@media (max-width: 800px) and (min-width: 600px) {
+    .display-container {
+        height: 100vh;
+        overflow: hidden;
+    }
+    
+    .notes-section {
+        flex: 0.6;
+        min-height: 0;
+    }
+    
+    .hours-section {
+        flex: 0.4;
+        min-height: 0;
+    }
+    
+    .support-section {
+        flex-shrink: 0;
+    }
+    
+}

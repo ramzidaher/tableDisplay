@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notes Display</title>
+    <link rel="stylesheet" href="display.css">
+</head>
+<body>
+    <div class="display-container">
+        <div class="display-header">
+            <h1>IT Office</h1>
+            <div class="status-indicator">
+                <span id="connectionStatus">●</span>
+                <span id="lastUpdate">Last updated: Never</span>
+            </div>
+        </div>
+        
+        <!-- Top Section: Notes -->
+        <div class="notes-section">
+            <div class="notes-display" id="notesDisplay">
+                <div class="loading-message">
+                    <div class="spinner"></div>
+                    <p>Loading notes...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Section: Working Hours -->
+        <div class="hours-section">
+            <div class="section-header">
+                <h2>👥 WORKING HOURS</h2>
+            </div>
+            <div class="working-hours-display" id="workingHoursDisplay">
+                <div class="loading-message">
+                    <div class="spinner"></div>
+                    <p>Loading schedule...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- IT Support Section -->
+        <div class="support-section">
+            <div class="support-info">
+                <div class="support-text">
+                    <h3>💻 IT Office</h3>
+                    <p>Email: support@sussexstudent.com</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="display.js"></script>
+</body>
+</html>
