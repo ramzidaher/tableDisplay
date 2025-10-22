@@ -114,7 +114,11 @@ class AdminDashboard {
     // Notes Management
     async loadNotes() {
         try {
-            const response = await fetch('/api/notes');
+            const apiUrl = window.location.hostname.includes('netlify.app') 
+                ? '/.netlify/functions/notes' 
+                : '/api/notes';
+                
+            const response = await fetch(apiUrl);
             if (response.ok) {
                 this.notes = await response.json();
                 this.renderNotes();
@@ -140,7 +144,11 @@ class AdminDashboard {
         }
 
         try {
-            const response = await fetch('/api/notes', {
+            const apiUrl = window.location.hostname.includes('netlify.app') 
+                ? '/.netlify/functions/notes' 
+                : '/api/notes';
+                
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message, priority })
@@ -261,7 +269,14 @@ class AdminDashboard {
     // Presets Management
     async loadPresets() {
         try {
-            const response = await fetch('/api/presets');
+            // Try Netlify function first, then local API
+            let response;
+            if (window.location.hostname.includes('netlify.app')) {
+                response = await fetch('/.netlify/functions/presets');
+            } else {
+                response = await fetch('/api/presets');
+            }
+            
             if (response.ok) {
                 this.presets = await response.json();
                 this.renderPresets();
@@ -379,7 +394,11 @@ class AdminDashboard {
         }
 
         try {
-            const response = await fetch('/api/presets', {
+            const apiUrl = window.location.hostname.includes('netlify.app') 
+                ? '/.netlify/functions/presets' 
+                : '/api/presets';
+                
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: text.trim(), priority })
@@ -432,7 +451,11 @@ class AdminDashboard {
         }
 
         try {
-            const response = await fetch(`/api/presets/${presetId}`, {
+            const apiUrl = window.location.hostname.includes('netlify.app') 
+                ? `/.netlify/functions/presets/${presetId}` 
+                : `/api/presets/${presetId}`;
+                
+            const response = await fetch(apiUrl, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: newText.trim(), priority: newPriority })
@@ -442,11 +465,19 @@ class AdminDashboard {
                 await this.loadPresets();
                 this.updateStatus('Preset updated successfully');
             } else {
-                this.updateStatus('Error updating preset', 'error');
+                // Fallback: update local array
+                preset.text = newText.trim();
+                preset.priority = newPriority;
+                this.renderPresets();
+                this.updateStatus('Preset updated (local only - database not available)');
             }
         } catch (error) {
             console.error('Error updating preset:', error);
-            this.updateStatus('Connection error', 'error');
+            // Fallback: update local array
+            preset.text = newText.trim();
+            preset.priority = newPriority;
+            this.renderPresets();
+            this.updateStatus('Preset updated (local only - database not available)');
         }
     }
 
@@ -454,7 +485,11 @@ class AdminDashboard {
         if (!confirm('Are you sure you want to delete this preset?')) return;
 
         try {
-            const response = await fetch(`/api/presets/${presetId}`, {
+            const apiUrl = window.location.hostname.includes('netlify.app') 
+                ? `/.netlify/functions/presets/${presetId}` 
+                : `/api/presets/${presetId}`;
+                
+            const response = await fetch(apiUrl, {
                 method: 'DELETE'
             });
 
@@ -462,11 +497,17 @@ class AdminDashboard {
                 await this.loadPresets();
                 this.updateStatus('Preset deleted successfully');
             } else {
-                this.updateStatus('Error deleting preset', 'error');
+                // Fallback: remove from local array
+                this.presets = this.presets.filter(p => p.id !== presetId);
+                this.renderPresets();
+                this.updateStatus('Preset deleted (local only - database not available)');
             }
         } catch (error) {
             console.error('Error deleting preset:', error);
-            this.updateStatus('Connection error', 'error');
+            // Fallback: remove from local array
+            this.presets = this.presets.filter(p => p.id !== presetId);
+            this.renderPresets();
+            this.updateStatus('Preset deleted (local only - database not available)');
         }
     }
 
