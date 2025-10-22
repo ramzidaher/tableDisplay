@@ -114,11 +114,7 @@ class AdminDashboard {
     // Notes Management
     async loadNotes() {
         try {
-            const apiUrl = window.location.hostname.includes('netlify.app') 
-                ? '/.netlify/functions/notes' 
-                : '/api/notes';
-                
-            const response = await fetch(apiUrl);
+            const response = await fetch('/api/notes');
             if (response.ok) {
                 this.notes = await response.json();
                 this.renderNotes();
@@ -144,11 +140,7 @@ class AdminDashboard {
         }
 
         try {
-            const apiUrl = window.location.hostname.includes('netlify.app') 
-                ? '/.netlify/functions/notes' 
-                : '/api/notes';
-                
-            const response = await fetch(apiUrl, {
+            const response = await fetch('/api/notes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message, priority })
@@ -269,14 +261,7 @@ class AdminDashboard {
     // Presets Management
     async loadPresets() {
         try {
-            // Try Netlify function first, then local API
-            let response;
-            if (window.location.hostname.includes('netlify.app')) {
-                response = await fetch('/.netlify/functions/presets');
-            } else {
-                response = await fetch('/api/presets');
-            }
-            
+            const response = await fetch('/api/presets');
             if (response.ok) {
                 this.presets = await response.json();
                 this.renderPresets();
@@ -394,11 +379,7 @@ class AdminDashboard {
         }
 
         try {
-            const apiUrl = window.location.hostname.includes('netlify.app') 
-                ? '/.netlify/functions/presets' 
-                : '/api/presets';
-                
-            const response = await fetch(apiUrl, {
+            const response = await fetch('/api/presets', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: text.trim(), priority })
@@ -451,11 +432,7 @@ class AdminDashboard {
         }
 
         try {
-            const apiUrl = window.location.hostname.includes('netlify.app') 
-                ? `/.netlify/functions/presets/${presetId}` 
-                : `/api/presets/${presetId}`;
-                
-            const response = await fetch(apiUrl, {
+            const response = await fetch(`/api/presets/${presetId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: newText.trim(), priority: newPriority })
@@ -485,11 +462,7 @@ class AdminDashboard {
         if (!confirm('Are you sure you want to delete this preset?')) return;
 
         try {
-            const apiUrl = window.location.hostname.includes('netlify.app') 
-                ? `/.netlify/functions/presets/${presetId}` 
-                : `/api/presets/${presetId}`;
-                
-            const response = await fetch(apiUrl, {
+            const response = await fetch(`/api/presets/${presetId}`, {
                 method: 'DELETE'
             });
 

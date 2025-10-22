@@ -28,6 +28,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/presets"
+  to = "/.netlify/functions/presets"
+  status = 200
+
+[[redirects]]
+  from = "/api/presets/*"
+  to = "/.netlify/functions/presets"
+  status = 200
+
+[[redirects]]
   from = "/display"
   to = "/display.html"
   status = 200
