@@ -69,28 +69,46 @@ class AdminDashboard {
 
     // Socket.IO initialization
     initializeSocket() {
-        this.socket = io();
-        
-        this.socket.on('connect', () => {
-            console.log('Connected to signaling server');
-        });
+        try {
+            // Check if we're on Netlify (no Socket.IO server available)
+            if (window.location.hostname.includes('netlify.app') || !window.io) {
+                console.log('Socket.IO not available, using fallback mode');
+                this.socket = null;
+                return;
+            }
 
-        this.socket.on('disconnect', () => {
-            console.log('Disconnected from signaling server');
-        });
+            this.socket = io();
+            
+            this.socket.on('connect', () => {
+                console.log('Connected to signaling server');
+            });
 
-        // Handle WebRTC signaling
-        this.socket.on('offer', async (data) => {
-            await this.handleOffer(data);
-        });
+            this.socket.on('disconnect', () => {
+                console.log('Disconnected from signaling server');
+            });
 
-        this.socket.on('answer', async (data) => {
-            await this.handleAnswer(data);
-        });
+            // Handle WebRTC signaling
+            this.socket.on('offer', async (data) => {
+                await this.handleOffer(data);
+            });
 
-        this.socket.on('ice-candidate', async (data) => {
-            await this.handleIceCandidate(data);
-        });
+            this.socket.on('answer', async (data) => {
+                await this.handleAnswer(data);
+            });
+
+            this.socket.on('ice-candidate', async (data) => {
+                await this.handleIceCandidate(data);
+            });
+
+            // Handle display messages
+            this.socket.on('display-message', (data) => {
+                console.log('Display message received:', data);
+                this.showMessageModal(data);
+            });
+        } catch (error) {
+            console.log('Socket.IO initialization failed, using fallback mode:', error);
+            this.socket = null;
+        }
     }
 
     // Notes Management
@@ -330,7 +348,9 @@ class AdminDashboard {
             this.socket.emit('display-message', message);
             this.updateStatus('Message sent to display');
         } else {
-            this.updateStatus('Connection not available', 'error');
+            // Fallback: show alert since Socket.IO is not available on Netlify
+            alert(`Message: ${text}\nPriority: ${priority}\n\nNote: Real-time messaging requires a Socket.IO server. This is a fallback notification.`);
+            this.updateStatus('Message shown as fallback (Socket.IO not available)');
         }
     }
 
@@ -560,6 +580,11 @@ class AdminDashboard {
     async startWebRTCStreaming() {
         if (!this.cameraStream) {
             this.updateStatus('Please initialize camera first', 'error');
+            return;
+        }
+
+        if (!this.socket) {
+            this.updateStatus('WebRTC streaming requires Socket.IO server (not available on Netlify)', 'error');
             return;
         }
 

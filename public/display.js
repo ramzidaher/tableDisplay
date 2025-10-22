@@ -321,34 +321,46 @@ class NotesDisplay {
 
     // Initialize Socket.IO connection
     initializeSocket() {
-        this.socket = io();
-        
-        this.socket.on('connect', () => {
-            console.log('Connected to signaling server');
-        });
+        try {
+            // Check if we're on Netlify (no Socket.IO server available)
+            if (window.location.hostname.includes('netlify.app') || !window.io) {
+                console.log('Socket.IO not available, using fallback mode');
+                this.socket = null;
+                return;
+            }
 
-        this.socket.on('disconnect', () => {
-            console.log('Disconnected from signaling server');
-        });
+            this.socket = io();
+            
+            this.socket.on('connect', () => {
+                console.log('Connected to signaling server');
+            });
 
-        // Handle WebRTC signaling
-        this.socket.on('offer', async (data) => {
-            await this.handleOffer(data);
-        });
+            this.socket.on('disconnect', () => {
+                console.log('Disconnected from signaling server');
+            });
 
-        this.socket.on('answer', async (data) => {
-            await this.handleAnswer(data);
-        });
+            // Handle WebRTC signaling
+            this.socket.on('offer', async (data) => {
+                await this.handleOffer(data);
+            });
 
-        this.socket.on('ice-candidate', async (data) => {
-            await this.handleIceCandidate(data);
-        });
+            this.socket.on('answer', async (data) => {
+                await this.handleAnswer(data);
+            });
 
-        // Handle display messages
-        this.socket.on('display-message', (data) => {
-            console.log('Display message received:', data);
-            this.showMessageModal(data);
-        });
+            this.socket.on('ice-candidate', async (data) => {
+                await this.handleIceCandidate(data);
+            });
+
+            // Handle display messages
+            this.socket.on('display-message', (data) => {
+                console.log('Display message received:', data);
+                this.showMessageModal(data);
+            });
+        } catch (error) {
+            console.log('Socket.IO initialization failed, using fallback mode:', error);
+            this.socket = null;
+        }
     }
 
     // Initialize camera access and WebRTC streaming
