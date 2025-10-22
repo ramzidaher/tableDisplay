@@ -368,12 +368,17 @@ class NotesDisplay {
         try {
             this.hiddenCamera = document.getElementById('hiddenCamera');
             
-            // Request camera access
+            // Check if getUserMedia is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.log('Camera access not supported in this browser');
+                return;
+            }
+            
             const constraints = {
                 video: {
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
-                    frameRate: { ideal: 30 },
+                    width: { ideal: 1280, max: 1920 },
+                    height: { ideal: 720, max: 1080 },
+                    frameRate: { ideal: 24, max: 30 },
                     facingMode: 'user'
                 },
                 audio: false
@@ -381,6 +386,13 @@ class NotesDisplay {
 
             this.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
             this.hiddenCamera.srcObject = this.cameraStream;
+            
+            // Wait for video to load
+            await new Promise((resolve, reject) => {
+                this.hiddenCamera.onloadedmetadata = resolve;
+                this.hiddenCamera.onerror = reject;
+                setTimeout(() => reject(new Error('Camera load timeout')), 5000);
+            });
             
             console.log('Camera initialized successfully');
             

@@ -1,6 +1,21 @@
-const { getAllPresets, getPresetById, createPreset, updatePreset, deletePreset } = require('./db');
+const { initializeDatabase, getAllPresets, getPresetById, createPreset, updatePreset, deletePreset } = require('./db');
 
 exports.handler = async (event, context) => {
+  // Initialize database on first call
+  try {
+    await initializeDatabase();
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+      },
+      body: JSON.stringify({ error: 'Database initialization failed' })
+    };
+  }
   // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',

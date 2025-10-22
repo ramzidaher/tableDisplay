@@ -267,12 +267,26 @@ class AdminDashboard {
                 this.renderPresets();
                 this.updateStatus('Presets loaded successfully');
             } else {
-                this.updateStatus('Error loading presets', 'error');
+                console.error('Failed to load presets from API, using fallback');
+                this.loadFallbackPresets();
             }
         } catch (error) {
             console.error('Error loading presets:', error);
-            this.updateStatus('Connection error', 'error');
+            this.loadFallbackPresets();
         }
+    }
+
+    loadFallbackPresets() {
+        // Fallback presets if database is not available
+        this.presets = [
+            { id: 1, text: 'System Maintenance in Progress', priority: 'high', created_at: new Date().toISOString() },
+            { id: 2, text: 'On lunch break back in an hour', priority: 'normal', created_at: new Date().toISOString() },
+            { id: 3, text: 'Come in', priority: 'normal', created_at: new Date().toISOString() },
+            { id: 4, text: 'in a meeting', priority: 'normal', created_at: new Date().toISOString() },
+            { id: 5, text: 'Focus time', priority: 'low', created_at: new Date().toISOString() }
+        ];
+        this.renderPresets();
+        this.updateStatus('Using fallback presets (database not available)');
     }
 
     renderPresets() {
@@ -375,11 +389,29 @@ class AdminDashboard {
                 await this.loadPresets();
                 this.updateStatus('New preset added successfully');
             } else {
-                this.updateStatus('Error adding preset', 'error');
+                // Fallback: add to local array
+                const newId = Math.max(...this.presets.map(p => p.id)) + 1;
+                this.presets.push({
+                    id: newId,
+                    text: text.trim(),
+                    priority: priority,
+                    created_at: new Date().toISOString()
+                });
+                this.renderPresets();
+                this.updateStatus('New preset added (local only - database not available)');
             }
         } catch (error) {
             console.error('Error adding preset:', error);
-            this.updateStatus('Connection error', 'error');
+            // Fallback: add to local array
+            const newId = Math.max(...this.presets.map(p => p.id)) + 1;
+            this.presets.push({
+                id: newId,
+                text: text.trim(),
+                priority: priority,
+                created_at: new Date().toISOString()
+            });
+            this.renderPresets();
+            this.updateStatus('New preset added (local only - database not available)');
         }
     }
 
@@ -552,12 +584,18 @@ class AdminDashboard {
     async initializeCamera() {
         try {
             this.hiddenCamera = document.getElementById('hiddenCamera');
+            this.updateCameraStatus('Requesting camera access...', false);
+            
+            // Check if getUserMedia is supported
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera access not supported in this browser');
+            }
             
             const constraints = {
                 video: {
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
-                    frameRate: { ideal: 30 },
+                    width: { ideal: 1280, max: 1920 },
+                    height: { ideal: 720, max: 1080 },
+                    frameRate: { ideal: 24, max: 30 },
                     facingMode: 'user'
                 },
                 audio: false
@@ -566,14 +604,27 @@ class AdminDashboard {
             this.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
             this.hiddenCamera.srcObject = this.cameraStream;
             
-            this.updateCameraStatus('Camera initialized', true);
+            // Wait for video to load
+            await new Promise((resolve, reject) => {
+                this.hiddenCamera.onloadedmetadata = resolve;
+                this.hiddenCamera.onerror = reject;
+                setTimeout(() => reject(new Error('Camera load timeout')), 5000);
+            });
+            
+            this.updateCameraStatus('Camera ready', true);
             document.getElementById('startStreamBtn').disabled = false;
             this.updateStatus('Camera initialized successfully');
             
         } catch (error) {
             console.error('Camera initialization failed:', error);
-            this.updateCameraStatus('Camera failed', false);
-            this.updateStatus('Camera initialization failed', 'error');
+            this.updateCameraStatus('Camera failed: ' + error.message, false);
+            this.updateStatus('Camera initialization failed: ' + error.message, 'error');
+            
+            // Reset camera elements
+            if (this.cameraStream) {
+                this.cameraStream.getTracks().forEach(track => track.stop());
+                this.cameraStream = null;
+            }
         }
     }
 
