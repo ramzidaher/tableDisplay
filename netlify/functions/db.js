@@ -42,6 +42,17 @@ async function initializeDatabase() {
       )
     `);
 
+    // Create presets table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS presets (
+        id SERIAL PRIMARY KEY,
+        text TEXT NOT NULL,
+        priority VARCHAR(20) DEFAULT 'normal',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+
     // Insert default working hours if table is empty
     const countResult = await pool.query('SELECT COUNT(*) FROM working_hours');
     if (parseInt(countResult.rows[0].count) === 0) {
@@ -62,6 +73,25 @@ async function initializeDatabase() {
         await pool.query(
           'INSERT INTO working_hours (person, day, location, hours) VALUES ($1, $2, $3, $4)',
           [hour.person, hour.day, hour.location, hour.hours]
+        );
+      }
+    }
+
+    // Insert default presets if table is empty
+    const presetCountResult = await pool.query('SELECT COUNT(*) FROM presets');
+    if (parseInt(presetCountResult.rows[0].count) === 0) {
+      const defaultPresets = [
+        { text: 'System Maintenance in Progress', priority: 'high' },
+        { text: 'On lunch break back in an hour', priority: 'normal' },
+        { text: 'Come in', priority: 'normal' },
+        { text: 'in a meeting', priority: 'normal' },
+        { text: 'Focus time', priority: 'low' }
+      ];
+
+      for (const preset of defaultPresets) {
+        await pool.query(
+          'INSERT INTO presets (text, priority) VALUES ($1, $2)',
+          [preset.text, preset.priority]
         );
       }
     }
@@ -226,6 +256,38 @@ async function getPersonSchedule(person) {
   };
 }
 
+// Presets functions
+async function getAllPresets() {
+  const result = await pool.query('SELECT * FROM presets ORDER BY created_at DESC');
+  return result.rows;
+}
+
+async function getPresetById(id) {
+  const result = await pool.query('SELECT * FROM presets WHERE id = $1', [id]);
+  return result.rows[0];
+}
+
+async function createPreset(text, priority = 'normal') {
+  const result = await pool.query(
+    'INSERT INTO presets (text, priority) VALUES ($1, $2) RETURNING *',
+    [text, priority]
+  );
+  return result.rows[0];
+}
+
+async function updatePreset(id, text, priority) {
+  const result = await pool.query(
+    'UPDATE presets SET text = $1, priority = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
+    [text, priority, id]
+  );
+  return result.rows[0];
+}
+
+async function deletePreset(id) {
+  const result = await pool.query('DELETE FROM presets WHERE id = $1 RETURNING *', [id]);
+  return result.rows[0];
+}
+
 module.exports = {
   pool,
   initializeDatabase,
@@ -240,5 +302,11 @@ module.exports = {
   getAllWorkingHours,
   updatePersonSchedule,
   updatePersonDay,
-  getPersonSchedule
+  getPersonSchedule,
+  // Presets functions
+  getAllPresets,
+  getPresetById,
+  createPreset,
+  updatePreset,
+  deletePreset
 };

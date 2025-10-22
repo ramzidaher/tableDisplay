@@ -82,3 +82,6 @@ The collection uses these variables:
 - **API**: https://profound-malasada-57c01b.netlify.app/api/
 
 Happy testing! 🚀
+
+
+

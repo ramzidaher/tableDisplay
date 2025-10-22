@@ -2,8 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -181,6 +190,97 @@ app.put('/api/working-hours/:person/:day', (req, res) => {
   res.json(workingHours[person].schedule[day]);
 });
 
+// Presets API Routes
+// In-memory storage for presets (in production, use database)
+let presets = [
+  { id: 1, text: 'System Maintenance in Progress', priority: 'high', created_at: new Date().toISOString() },
+  { id: 2, text: 'On lunch break back in an hour', priority: 'normal', created_at: new Date().toISOString() },
+  { id: 3, text: 'Come in', priority: 'normal', created_at: new Date().toISOString() },
+  { id: 4, text: 'in a meeting', priority: 'normal', created_at: new Date().toISOString() },
+  { id: 5, text: 'Focus time', priority: 'low', created_at: new Date().toISOString() }
+];
+
+// Get all presets
+app.get('/api/presets', (req, res) => {
+  res.json(presets);
+});
+
+// Get a specific preset by ID
+app.get('/api/presets/:id', (req, res) => {
+  const presetId = parseInt(req.params.id);
+  const preset = presets.find(p => p.id === presetId);
+  
+  if (!preset) {
+    return res.status(404).json({ error: 'Preset not found' });
+  }
+  
+  res.json(preset);
+});
+
+// Create a new preset
+app.post('/api/presets', (req, res) => {
+  const { text, priority = 'normal' } = req.body;
+  
+  if (!text || text.trim() === '') {
+    return res.status(400).json({ error: 'Text is required' });
+  }
+  
+  // Find the lowest available ID
+  const existingIds = presets.map(p => p.id).sort((a, b) => a - b);
+  let newId = 1;
+  for (const id of existingIds) {
+    if (id === newId) {
+      newId++;
+    } else {
+      break;
+    }
+  }
+  
+  const newPreset = {
+    id: newId,
+    text: text.trim(),
+    priority: priority || 'normal',
+    created_at: new Date().toISOString()
+  };
+  
+  presets.push(newPreset);
+  res.status(201).json(newPreset);
+});
+
+// Update a preset
+app.put('/api/presets/:id', (req, res) => {
+  const presetId = parseInt(req.params.id);
+  const { text, priority } = req.body;
+  
+  const presetIndex = presets.findIndex(p => p.id === presetId);
+  
+  if (presetIndex === -1) {
+    return res.status(404).json({ error: 'Preset not found' });
+  }
+  
+  if (text !== undefined) {
+    presets[presetIndex].text = text.trim();
+  }
+  if (priority !== undefined) {
+    presets[presetIndex].priority = priority;
+  }
+  
+  res.json(presets[presetIndex]);
+});
+
+// Delete a preset
+app.delete('/api/presets/:id', (req, res) => {
+  const presetId = parseInt(req.params.id);
+  const presetIndex = presets.findIndex(p => p.id === presetId);
+  
+  if (presetIndex === -1) {
+    return res.status(404).json({ error: 'Preset not found' });
+  }
+  
+  presets.splice(presetIndex, 1);
+  res.json({ message: 'Preset deleted successfully' });
+});
+
 // Serve the main admin page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -191,12 +291,46 @@ app.get('/display', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'display.html'));
 });
 
+// Serve the video page for camera feed
+app.get('/video', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'video.html'));
+});
+
+// WebSocket handling for WebRTC signaling and messaging
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+
+  // Handle WebRTC signaling
+  socket.on('offer', (data) => {
+    socket.broadcast.emit('offer', data);
+  });
+
+  socket.on('answer', (data) => {
+    socket.broadcast.emit('answer', data);
+  });
+
+  socket.on('ice-candidate', (data) => {
+    socket.broadcast.emit('ice-candidate', data);
+  });
+
+  // Handle display messages
+  socket.on('display-message', (data) => {
+    console.log('Display message received:', data);
+    socket.broadcast.emit('display-message', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log('Routes:');
   console.log('  GET    /              - Admin interface');
   console.log('  GET    /display       - Display screen for notes');
+  console.log('  GET    /video         - Camera feed display');
   console.log('API endpoints:');
   console.log('  GET    /api/notes     - Get all notes');
   console.log('  POST   /api/notes     - Create new note');
@@ -206,4 +340,8 @@ app.listen(PORT, () => {
   console.log('  GET    /api/working-hours - Get working hours');
   console.log('  PUT    /api/working-hours/:person - Update person schedule');
   console.log('  PUT    /api/working-hours/:person/:day - Update specific day');
+  console.log('  GET    /api/presets - Get all presets');
+  console.log('  POST   /api/presets - Create new preset');
+  console.log('  PUT    /api/presets/:id - Update preset');
+  console.log('  DELETE /api/presets/:id - Delete preset');
 });

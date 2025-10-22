@@ -3,29 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IT Office - Admin</title>
+    <title>IT Office - Admin Dashboard</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <div class="glass-container">
+        <!-- Header Section -->
         <div class="display-header">
-            <h1>📝 IT Office Admin</h1>
-            <div class="controls">
-                <input type="text" id="newNoteInput" placeholder="Enter your message..." maxlength="200">
-                <button id="addNoteBtn">Add Note</button>
-                <button id="clearAllBtn">Clear All</button>
+            <h1>💻 IT Office Admin Dashboard</h1>
+            <div class="header-controls">
+                <button id="openDisplayBtn" class="control-btn">📺 Open Display</button>
+                <button id="openVideoBtn" class="control-btn">📹 Open Camera</button>
+                <button id="startCameraBtn" class="control-btn">🎥 Start Camera Stream</button>
+            </div>
+        </div>
+
+        <!-- Tabs Section -->
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="notes">📝 Notes</button>
+            <button class="tab-btn" data-tab="schedule">👥 Schedule</button>
+            <button class="tab-btn" data-tab="presets">⚡ Presets</button>
+            <button class="tab-btn" data-tab="camera">📹 Camera</button>
+        </div>
+
+        <!-- Notes Tab -->
+        <div class="tab-content active" id="notes-tab">
+            <div class="section-header">
+                <h2>📝 Notes Management</h2>
+                <div class="controls">
+                    <input type="text" id="newNoteInput" placeholder="Enter your message..." maxlength="200">
+                    <select id="prioritySelect">
+                        <option value="normal">Normal</option>
+                        <option value="high">High Priority</option>
+                        <option value="low">Low Priority</option>
+                    </select>
+                    <button id="addNoteBtn">Add Note</button>
+                    <button id="clearAllBtn">Clear All</button>
+                </div>
+            </div>
+            
+            <div class="notes-container" id="notesContainer">
+                <!-- Notes will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Schedule Tab -->
+        <div class="tab-content" id="schedule-tab">
+            <div class="section-header">
+                <h2>👥 Working Hours Management</h2>
+            </div>
+            
+            <div class="schedule-container" id="scheduleContainer">
+                <!-- Schedule will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Presets Tab -->
+        <div class="tab-content" id="presets-tab">
+            <div class="section-header">
+                <h2>⚡ Quick Preset Notes</h2>
+                <p>Click any preset to add it as a note</p>
+            </div>
+            
+            <div class="presets-container" id="presetsContainer">
+                <!-- Presets will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Camera Tab -->
+        <div class="tab-content" id="camera-tab">
+            <div class="section-header">
+                <h2>📹 Camera Controls</h2>
+                <p>Manage camera streaming to the display</p>
+            </div>
+            
+            <div class="camera-controls">
+                <div class="camera-status">
+                    <div class="status-indicator">
+                        <span id="cameraStatusDot" class="status-dot"></span>
+                        <span id="cameraStatusText">Camera: Not Started</span>
+                    </div>
+                </div>
+                
+                <div class="camera-actions">
+                    <button id="initCameraBtn" class="control-btn">🎥 Initialize Camera</button>
+                    <button id="startStreamBtn" class="control-btn" disabled>📡 Start Stream</button>
+                    <button id="stopStreamBtn" class="control-btn" disabled>⏹️ Stop Stream</button>
+                </div>
+                
+                <div class="camera-info">
+                    <h3>How it works:</h3>
+                    <ol>
+                        <li>Click "Initialize Camera" to access your camera</li>
+                        <li>Click "Start Stream" to begin streaming to the display</li>
+                        <li>The camera feed will appear on the /video page</li>
+                        <li>Use "Open Display" to see the main display</li>
+                        <li>Use "Open Camera" to see the camera feed</li>
+                    </ol>
+                </div>
             </div>
         </div>
         
-        <div class="notes-container" id="notesContainer">
-            <!-- Notes will be dynamically loaded here -->
-        </div>
-        
+        <!-- Status Bar -->
         <div class="status-bar">
             <span id="statusText">Ready</span>
             <span id="lastUpdate">Last updated: Never</span>
         </div>
     </div>
+
+    <!-- Hidden camera element for streaming -->
+    <video id="hiddenCamera" style="display: none;" autoplay muted playsinline></video>
 
     <script src="script.js"></script>
 </body>

