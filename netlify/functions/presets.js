@@ -35,6 +35,9 @@ exports.handler = async (event, context) => {
   try {
     const path = event.path;
     const method = event.httpMethod;
+    
+    // Debug logging
+    console.log('Presets function called:', { path, method });
 
     // Parse request body for POST/PUT requests
     let body = {};
@@ -51,7 +54,7 @@ exports.handler = async (event, context) => {
     }
 
     // Route handling
-    if (method === 'GET' && path === '/.netlify/functions/presets') {
+    if (method === 'GET' && (path === '/.netlify/functions/presets' || path === '/api/presets')) {
       // Get all presets
       const presets = await getAllPresets();
       return {
@@ -88,7 +91,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    if (method === 'POST' && path === '/.netlify/functions/presets') {
+    if (method === 'POST' && (path === '/.netlify/functions/presets' || path === '/api/presets')) {
       // Create new preset
       const { text, priority = 'normal' } = body;
 
@@ -172,11 +175,14 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Debug: log unmatched request
+    console.log('Unmatched request:', { path, method });
+    
     // Method not allowed
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
+      body: JSON.stringify({ error: 'Method not allowed', path, method })
     };
 
   } catch (error) {

@@ -17,7 +17,7 @@ class AdminDashboard {
         this.loadNotes();
         this.loadWorkingHours();
         this.loadPresets();
-        this.initializeSocket();
+        this.initializeAbly();
         this.startAutoRefresh();
     }
 
@@ -67,48 +67,58 @@ class AdminDashboard {
         }
     }
 
-    // Socket.IO initialization
-    initializeSocket() {
+    // Ably initialization
+    async initializeAbly() {
         try {
-            // Check if we're on Netlify (no Socket.IO server available)
-            if (window.location.hostname.includes('netlify.app') || !window.io) {
-                console.log('Socket.IO not available, using fallback mode');
-                this.socket = null;
+            // Check if Ably is available
+            if (!window.Ably) {
+                console.log('Ably not available, using fallback mode');
+                this.ably = null;
                 return;
             }
 
-            this.socket = io();
-            
-            this.socket.on('connect', () => {
-                console.log('Connected to signaling server');
+            // Create Ably connection with token authentication
+            this.ably = new Ably.Realtime({
+                authUrl: '/.netlify/functions/ably-token-request',
+                clientId: 'admin-dashboard-' + Date.now()
             });
 
-            this.socket.on('disconnect', () => {
-                console.log('Disconnected from signaling server');
+            this.ably.connection.on('connected', () => {
+                console.log('Connected to Ably');
+                this.setupAblyChannels();
             });
 
-            // Handle WebRTC signaling
-            this.socket.on('offer', async (data) => {
-                await this.handleOffer(data);
+            this.ably.connection.on('disconnected', () => {
+                console.log('Disconnected from Ably');
             });
 
-            this.socket.on('answer', async (data) => {
-                await this.handleAnswer(data);
-            });
-
-            this.socket.on('ice-candidate', async (data) => {
-                await this.handleIceCandidate(data);
-            });
-
-            // Handle display messages
-            this.socket.on('display-message', (data) => {
-                console.log('Display message received:', data);
-                this.showMessageModal(data);
-            });
         } catch (error) {
-            console.log('Socket.IO initialization failed, using fallback mode:', error);
-            this.socket = null;
+            console.log('Ably initialization failed, using fallback mode:', error);
+            this.ably = null;
         }
+    }
+
+    setupAblyChannels() {
+        if (!this.ably) return;
+
+        // WebRTC signaling channel
+        this.webrtcChannel = this.ably.channels.get('webrtc-signaling');
+        this.webrtcChannel.subscribe('offer', async (message) => {
+            await this.handleOffer(message.data);
+        });
+        this.webrtcChannel.subscribe('answer', async (message) => {
+            await this.handleAnswer(message.data);
+        });
+        this.webrtcChannel.subscribe('ice-candidate', async (message) => {
+            await this.handleIceCandidate(message.data);
+        });
+
+        // Display messages channel
+        this.messageChannel = this.ably.channels.get('display-messages');
+        this.messageChannel.subscribe('display-message', (message) => {
+            console.log('Display message received:', message.data);
+            this.showMessageModal(message.data);
+        });
     }
 
     // Notes Management
@@ -351,7 +361,7 @@ class AdminDashboard {
     }
 
     sendMessage(text, priority) {
-        if (this.socket) {
+        if (this.ably && this.messageChannel) {
             const message = {
                 text: text,
                 priority: priority,
@@ -359,12 +369,12 @@ class AdminDashboard {
                 type: 'popup'
             };
             
-            this.socket.emit('display-message', message);
-            this.updateStatus('Message sent to display');
+            this.messageChannel.publish('display-message', message);
+            this.updateStatus('Message sent to display via Ably');
         } else {
-            // Fallback: show alert since Socket.IO is not available on Netlify
-            alert(`Message: ${text}\nPriority: ${priority}\n\nNote: Real-time messaging requires a Socket.IO server. This is a fallback notification.`);
-            this.updateStatus('Message shown as fallback (Socket.IO not available)');
+            // Fallback: show alert since Ably is not available
+            alert(`Message: ${text}\nPriority: ${priority}\n\nNote: Real-time messaging requires Ably configuration. This is a fallback notification.`);
+            this.updateStatus('Message shown as fallback (Ably not available)');
         }
     }
 
@@ -648,8 +658,8 @@ class AdminDashboard {
             return;
         }
 
-        if (!this.socket) {
-            this.updateStatus('WebRTC streaming requires Socket.IO server (not available on Netlify)', 'error');
+        if (!this.ably || !this.webrtcChannel) {
+            this.updateStatus('WebRTC streaming requires Ably connection (not available)', 'error');
             return;
         }
 
@@ -667,13 +677,13 @@ class AdminDashboard {
 
             this.peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
-                    this.socket.emit('ice-candidate', event.candidate);
+                    this.webrtcChannel.publish('ice-candidate', event.candidate);
                 }
             };
 
             const offer = await this.peerConnection.createOffer();
             await this.peerConnection.setLocalDescription(offer);
-            this.socket.emit('offer', offer);
+            this.webrtcChannel.publish('offer', offer);
 
             this.isStreaming = true;
             this.updateCameraStatus('Streaming active', true);
