@@ -202,6 +202,11 @@
                 try {
                     console.log('Received offer, creating answer...');
                     
+                    // Close existing connection if any
+                    if (this.peerConnection) {
+                        this.peerConnection.close();
+                    }
+                    
                     // Create peer connection
                     this.peerConnection = new RTCPeerConnection({
                         iceServers: [
@@ -221,8 +226,14 @@
 
                     // Handle ICE candidates
                     this.peerConnection.onicecandidate = (event) => {
-                        if (event.candidate) {
-                            this.socket.emit('ice-candidate', event.candidate);
+                        if (event.candidate && this.webrtcChannel) {
+                            // Convert RTCIceCandidate to serializable format
+                            const candidateData = {
+                                candidate: event.candidate.candidate,
+                                sdpMLineIndex: event.candidate.sdpMLineIndex,
+                                sdpMid: event.candidate.sdpMid
+                            };
+                            this.webrtcChannel.publish('ice-candidate', candidateData);
                         }
                     };
 
@@ -242,7 +253,7 @@
 
             // Handle incoming answer
             async handleAnswer(data) {
-                if (this.peerConnection) {
+                if (this.peerConnection && this.peerConnection.signalingState === 'have-local-offer') {
                     await this.peerConnection.setRemoteDescription(data);
                 }
             }
