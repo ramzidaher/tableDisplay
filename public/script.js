@@ -677,7 +677,13 @@ class AdminDashboard {
 
             this.peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
-                    this.webrtcChannel.publish('ice-candidate', event.candidate);
+                    // Convert RTCIceCandidate to serializable format
+                    const candidateData = {
+                        candidate: event.candidate.candidate,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex,
+                        sdpMid: event.candidate.sdpMid
+                    };
+                    this.webrtcChannel.publish('ice-candidate', candidateData);
                 }
             };
 

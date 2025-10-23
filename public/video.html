@@ -250,7 +250,13 @@
             // Handle incoming ICE candidate
             async handleIceCandidate(data) {
                 if (this.peerConnection) {
-                    await this.peerConnection.addIceCandidate(data);
+                    // Convert serialized data back to RTCIceCandidate
+                    const candidate = new RTCIceCandidate({
+                        candidate: data.candidate,
+                        sdpMLineIndex: data.sdpMLineIndex,
+                        sdpMid: data.sdpMid
+                    });
+                    await this.peerConnection.addIceCandidate(candidate);
                 }
             }
 
