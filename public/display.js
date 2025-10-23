@@ -455,15 +455,17 @@ class NotesDisplay {
 
             // Handle ICE candidates
             this.peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    this.socket.emit('ice-candidate', event.candidate);
+                if (event.candidate && this.webrtcChannel) {
+                    this.webrtcChannel.publish('ice-candidate', event.candidate);
                 }
             };
 
             // Create and send offer
             const offer = await this.peerConnection.createOffer();
             await this.peerConnection.setLocalDescription(offer);
-            this.socket.emit('offer', offer);
+            if (this.webrtcChannel) {
+                this.webrtcChannel.publish('offer', offer);
+            }
 
             this.isStreaming = true;
             console.log('WebRTC streaming started');
@@ -578,9 +580,9 @@ class NotesDisplay {
             this.cameraStream.getTracks().forEach(track => track.stop());
         }
         
-        // Close socket connection
-        if (this.socket) {
-            this.socket.disconnect();
+        // Close Ably connection
+        if (this.ably) {
+            this.ably.close();
         }
     }
 }

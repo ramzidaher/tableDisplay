@@ -136,42 +136,64 @@
                 this.loadingMessage = document.getElementById('loadingMessage');
                 this.errorMessage = document.getElementById('errorMessage');
                 this.errorText = document.getElementById('errorText');
-                this.socket = null;
+                this.ably = null;
+                this.webrtcChannel = null;
                 this.peerConnection = null;
                 this.isConnected = false;
                 this.init();
             }
 
             async init() {
-                this.initializeSocket();
+                this.initializeAbly();
                 this.updateStatus('Waiting for stream...', false);
             }
 
-            // Initialize Socket.IO connection
-            initializeSocket() {
-                this.socket = io();
-                
-                this.socket.on('connect', () => {
-                    console.log('Connected to signaling server');
-                    this.updateStatus('Connected to server', true);
-                });
+            // Initialize Ably connection
+            async initializeAbly() {
+                try {
+                    // Check if Ably is available
+                    if (!window.Ably) {
+                        console.log('Ably not available, using fallback mode');
+                        this.updateStatus('Ably not available', false);
+                        return;
+                    }
 
-                this.socket.on('disconnect', () => {
-                    console.log('Disconnected from signaling server');
-                    this.updateStatus('Disconnected', false);
-                });
+                    // Create Ably connection with token authentication
+                    this.ably = new Ably.Realtime({
+                        authUrl: '/.netlify/functions/ably-token-request',
+                        clientId: 'video-receiver-' + Date.now()
+                    });
 
-                // Handle WebRTC signaling
-                this.socket.on('offer', async (data) => {
-                    await this.handleOffer(data);
-                });
+                    this.ably.connection.on('connected', () => {
+                        console.log('Connected to Ably');
+                        this.updateStatus('Connected to server', true);
+                        this.setupAblyChannels();
+                    });
 
-                this.socket.on('answer', async (data) => {
-                    await this.handleAnswer(data);
-                });
+                    this.ably.connection.on('disconnected', () => {
+                        console.log('Disconnected from Ably');
+                        this.updateStatus('Disconnected', false);
+                    });
 
-                this.socket.on('ice-candidate', async (data) => {
-                    await this.handleIceCandidate(data);
+                } catch (error) {
+                    console.log('Ably initialization failed:', error);
+                    this.updateStatus('Connection failed', false);
+                }
+            }
+
+            setupAblyChannels() {
+                if (!this.ably) return;
+
+                // WebRTC signaling channel
+                this.webrtcChannel = this.ably.channels.get('webrtc-signaling');
+                this.webrtcChannel.subscribe('offer', async (message) => {
+                    await this.handleOffer(message.data);
+                });
+                this.webrtcChannel.subscribe('answer', async (message) => {
+                    await this.handleAnswer(message.data);
+                });
+                this.webrtcChannel.subscribe('ice-candidate', async (message) => {
+                    await this.handleIceCandidate(message.data);
                 });
             }
 
@@ -208,7 +230,9 @@
                     await this.peerConnection.setRemoteDescription(data);
                     const answer = await this.peerConnection.createAnswer();
                     await this.peerConnection.setLocalDescription(answer);
-                    this.socket.emit('answer', answer);
+                    if (this.webrtcChannel) {
+                        this.webrtcChannel.publish('answer', answer);
+                    }
 
                 } catch (error) {
                     console.error('Error handling offer:', error);
@@ -252,8 +276,8 @@
                     this.peerConnection.close();
                 }
                 
-                if (this.socket) {
-                    this.socket.disconnect();
+                if (this.ably) {
+                    this.ably.close();
                 }
             }
         }
